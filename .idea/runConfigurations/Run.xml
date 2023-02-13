@@ -1,6 +1,6 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="Run" type="CargoCommandRunConfiguration" factoryName="Cargo Command">
-    <option name="command" value="run --package advent-of-code-2022 --bin advent-of-code-2022 -- 1 one" />
+    <option name="command" value="run --package advent-of-code-2022 --bin advent-of-code-2022 -- 1 two" />
     <option name="workingDirectory" value="file://$PROJECT_DIR$" />
     <option name="channel" value="NIGHTLY" />
     <option name="requiredFeatures" value="true" />
