@@ -64,7 +64,7 @@ pub fn solve_part_2(input: &str) -> String {
     total_score.to_string()
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 enum Shape {
     Rock,
     Paper,
@@ -82,7 +82,7 @@ impl Shape {
 }
 
 impl Shape {
-    fn wins_against(&self) -> Shape {
+    fn winner_against(self) -> Shape {
         match self {
             Shape::Rock => Shape::Scissors,
             Shape::Paper => Shape::Rock,
@@ -90,12 +90,20 @@ impl Shape {
         }
     }
 
-    fn loses_against(&self) -> Shape {
+    fn wins_against(self, other: Self) -> bool {
+        self.winner_against() == other
+    }
+
+    fn loser_against(self) -> Shape {
         match self {
             Shape::Rock => Shape::Paper,
             Shape::Paper => Shape::Scissors,
             Shape::Scissors => Shape::Rock,
         }
+    }
+
+    fn loses_against(self, other: Self) -> bool {
+        self.loser_against() == other
     }
 }
 
@@ -148,14 +156,15 @@ struct GamePartOne {
 
 impl GamePartOne {
     fn score(&self) -> i32 {
-        let outcome = match (&self.own, &self.opponent) {
-            (Shape::Rock, Shape::Scissors)
-            | (Shape::Paper, Shape::Rock)
-            | (Shape::Scissors, Shape::Paper) => Outcome::Win,
-            (Shape::Rock, Shape::Paper)
-            | (Shape::Paper, Shape::Scissors)
-            | (Shape::Scissors, Shape::Rock) => Outcome::Loss,
-            _ => Outcome::Draw,
+        let own = self.own;
+        let opponent = self.opponent;
+
+        let outcome = if own.wins_against(opponent) {
+            Outcome::Win
+        } else if own.loses_against(opponent) {
+            Outcome::Loss
+        } else {
+            Outcome::Draw
         };
 
         let score_from_outcome = outcome.score();
@@ -195,8 +204,8 @@ struct GamePartTwo {
 impl GamePartTwo {
     fn score(&self) -> i32 {
         let own = match self.outcome {
-            Outcome::Win => self.opponent.loses_against(),
-            Outcome::Loss => self.opponent.wins_against(),
+            Outcome::Win => self.opponent.loser_against(),
+            Outcome::Loss => self.opponent.winner_against(),
             Outcome::Draw => self.opponent,
         };
 
@@ -220,7 +229,7 @@ impl TryFrom<&str> for GamePartTwo {
         if space != ' ' {
             bail!("No space where there should be one");
         }
-        let outcome = game.next().ok_or_else(|| anyhow!("Missing otucome"))?;
+        let outcome = game.next().ok_or_else(|| anyhow!("Missing outcome"))?;
 
         let opponent = Shape::try_from(opponent).context("Invalid opponent shape")?;
         let outcome = Outcome::try_from(outcome).context("Invalid outcome")?;
