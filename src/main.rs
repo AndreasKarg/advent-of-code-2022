@@ -32,11 +32,14 @@ fn main() -> Result<()> {
 
     let response_body = input_fetcher::fetch(args.advent_day, &args.session_id);
 
-    let solution = match (args.advent_day, args.part) {
-        (1, Part::One) => days::day_1::solve_part_1(&response_body),
-        (1, Part::Two) => days::day_1::solve_part_2(&response_body),
+    let solver = match (args.advent_day, args.part) {
+        (1, Part::One) => days::day_1::solve_part_1,
+        (1, Part::Two) => days::day_1::solve_part_2,
+        (2, Part::One) => days::day_2::solve_part_1,
         _ => panic!("Unknown combo of advent day and puzzle part."),
     };
+
+    let solution = solver(&response_body);
 
     println!("The puzzle solution is:\n{solution}");
 
