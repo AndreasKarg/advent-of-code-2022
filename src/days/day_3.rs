@@ -1,7 +1,6 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use itertools::Itertools;
 use std::collections::HashSet;
-use std::hash::Hash;
 
 #[cfg(test)]
 mod tests {
@@ -51,6 +50,42 @@ mod tests {
         // Then
         assert_eq!(solution, "157");
     }
+
+    #[test]
+    fn find_badge_returns_the_item_that_is_common_for_all_elves_in_the_group() {
+        // Given
+        let items = [
+            "vJrwpWtwJgWrhcsFMMfFFhFp",
+            "jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL",
+            "PmmdzqPrVvPwwTWBwg",
+        ];
+
+        // When
+        let badge = find_badge(&items).unwrap();
+
+        // Then
+        assert_eq!(badge, 'r');
+    }
+
+    #[test]
+    fn solve_2_returns_the_sum_of_priorities_for_all_group_badges() {
+        // Given
+        let input = indoc! {
+            "vJrwpWtwJgWrhcsFMMfFFhFp
+             jqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL
+             PmmdzqPrVvPwwTWBwg
+             wMqvLMZHhHMvwLHjbvcjnnSBnvTQFn
+             ttgJtRGJQctTZtZT
+             CrZsJsPPZsGzwwsLwLmpwMDw"
+        }
+        .trim();
+
+        // When
+        let solution = solve_part_2(input);
+
+        // Then
+        assert_eq!(solution, "70");
+    }
 }
 
 pub fn solve_part_1(input_data: &str) -> String {
@@ -59,6 +94,21 @@ pub fn solve_part_1(input_data: &str) -> String {
     for rucksack in rucksacks {
         let fault = find_fault(rucksack).unwrap();
         let score = score_item(fault);
+
+        total_score += score;
+    }
+
+    total_score.to_string()
+}
+
+pub fn solve_part_2(input_data: &str) -> String {
+    let rucksacks = input_data.trim().split('\n');
+    let groups = rucksacks.array_chunks::<3>();
+
+    let mut total_score = 0;
+    for group in groups {
+        let badge = find_badge(&group).unwrap();
+        let score = score_item(badge);
 
         total_score += score;
     }
@@ -91,4 +141,19 @@ fn find_fault(rucksack: &str) -> Result<char> {
     let only_overlapping_item = item_types_in_both_compartments.into_iter().exactly_one()?;
 
     Ok(only_overlapping_item)
+}
+
+fn find_badge(rucksacks: &[&str; 3]) -> Result<char> {
+    let item_types = rucksacks.map(|rucksack| rucksack.chars().collect::<HashSet<_>>());
+    let first_two_common_items: HashSet<_> = item_types[0]
+        .intersection(&item_types[1])
+        .cloned()
+        .collect();
+    let possible_badges: Vec<_> = first_two_common_items
+        .intersection(&item_types[2])
+        .cloned()
+        .collect();
+    let badge = possible_badges.into_iter().exactly_one()?;
+
+    Ok(badge)
 }
