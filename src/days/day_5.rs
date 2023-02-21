@@ -205,6 +205,36 @@ pub fn solve_part_1(input_data: &str) -> String {
     stack_characters.into_iter().collect()
 }
 
+pub fn solve_part_2(input_data: &str) -> String {
+    let (
+        _,
+        PuzzleInput {
+            mut stacks,
+            instructions,
+        },
+    ) = parse_input(input_data).unwrap();
+
+    for instruction in instructions {
+        // println!("Current stack state: {stacks:#?}");
+        // println!("Executing instruction: {instruction:#?}");
+        let stack_from = stacks.get_mut(instruction.from as usize - 1).unwrap();
+
+        let splitting_point = stack_from.len() - instruction.count as usize;
+        let mut payload: Vec<_> = stack_from.drain(splitting_point..).collect();
+
+        let stack_to = stacks.get_mut(instruction.to as usize - 1).unwrap();
+        stack_to.extend_from_slice(&payload);
+    }
+
+    let mut stack_characters = Vec::new();
+    for stack in stacks {
+        let top_container = stack.last().unwrap();
+        stack_characters.push(top_container.identifier);
+    }
+
+    stack_characters.into_iter().collect()
+}
+
 #[derive(Debug, Clone, Eq, PartialEq)]
 struct Container {
     identifier: char,
