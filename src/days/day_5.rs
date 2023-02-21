@@ -1,12 +1,9 @@
-use anyhow::Context;
-use color_eyre::eyre::ContextCompat;
 use nom::branch::alt;
 use nom::bytes::complete::tag;
-use nom::character::complete::{anychar, char, digit1, line_ending, multispace0, one_of, space0};
-use nom::combinator::{map_res, opt};
-use nom::multi::{many0, many1};
-use nom::{Finish, IResult};
-use std::str::FromStr;
+use nom::character::complete::{char, line_ending, one_of, space0};
+use nom::combinator::opt;
+use nom::multi::many1;
+use nom::IResult;
 
 #[cfg(test)]
 mod tests {
@@ -220,7 +217,7 @@ pub fn solve_part_2(input_data: &str) -> String {
         let stack_from = stacks.get_mut(instruction.from as usize - 1).unwrap();
 
         let splitting_point = stack_from.len() - instruction.count as usize;
-        let mut payload: Vec<_> = stack_from.drain(splitting_point..).collect();
+        let payload: Vec<_> = stack_from.drain(splitting_point..).collect();
 
         let stack_to = stacks.get_mut(instruction.to as usize - 1).unwrap();
         stack_to.extend_from_slice(&payload);
