@@ -43,6 +43,7 @@ fn main() -> Result<()> {
         (3, Part::Two) => days::day_3::solve_part_2,
         (4, Part::One) => days::day_4::solve_part_1,
         (4, Part::Two) => days::day_4::solve_part_2,
+        (5, Part::One) => days::day_5::solve_part_1,
         _ => panic!("Unknown combo of advent day and puzzle part."),
     };
 
