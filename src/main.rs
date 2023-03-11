@@ -5,7 +5,6 @@ use color_eyre::{eyre::Context, Result};
 use std::collections::hash_map::DefaultHasher;
 use std::fs::{create_dir_all, read, write};
 use std::hash::{Hash, Hasher};
-use std::ptr::hash;
 
 mod days;
 mod input_fetcher;
@@ -84,6 +83,8 @@ fn main() -> Result<()> {
         (4, Part::Two) => days::day_4::solve_part_2,
         (5, Part::One) => days::day_5::solve_part_1,
         (5, Part::Two) => days::day_5::solve_part_2,
+        (6, Part::One) => days::day_6::solve_part_1,
+        (6, Part::Two) => days::day_6::solve_part_2,
         _ => panic!("Unknown combo of advent day and puzzle part."),
     };
 
