@@ -1,4 +1,8 @@
-use anyhow::{anyhow, bail, Context, Result};
+use color_eyre::{
+    eyre,
+    eyre::{bail, eyre, Context},
+    Result,
+};
 
 #[cfg(test)]
 mod tests {
@@ -108,14 +112,14 @@ impl Shape {
 }
 
 impl TryFrom<char> for Shape {
-    type Error = anyhow::Error;
+    type Error = eyre::Error;
 
     fn try_from(value: char) -> Result<Self> {
         match value {
             'A' | 'X' => Ok(Shape::Rock),
             'B' | 'Y' => Ok(Shape::Paper),
             'C' | 'Z' => Ok(Shape::Scissors),
-            other => Err(anyhow!("Invalid shape char {other}!")),
+            other => Err(eyre!("Invalid shape char {other}!")),
         }
     }
 }
@@ -137,14 +141,14 @@ impl Outcome {
 }
 
 impl TryFrom<char> for Outcome {
-    type Error = anyhow::Error;
+    type Error = eyre::Error;
 
     fn try_from(value: char) -> Result<Self> {
         match value {
             'X' => Ok(Outcome::Loss),
             'Y' => Ok(Outcome::Draw),
             'Z' => Ok(Outcome::Win),
-            other => Err(anyhow!("Invalid Outcome char {other}!")),
+            other => Err(eyre!("Invalid Outcome char {other}!")),
         }
     }
 }
@@ -175,19 +179,19 @@ impl GamePartOne {
 }
 
 impl TryFrom<&str> for GamePartOne {
-    type Error = anyhow::Error;
+    type Error = eyre::Error;
 
     fn try_from(game: &str) -> Result<Self> {
         let mut game = game.chars();
         let opponent = game
             .next()
-            .ok_or_else(|| anyhow!("Missing opponent action"))?;
+            .ok_or_else(|| eyre!("Missing opponent action"))?;
 
-        let space = game.next().ok_or_else(|| anyhow!("Missing space"))?;
+        let space = game.next().ok_or_else(|| eyre!("Missing space"))?;
         if space != ' ' {
             bail!("No space where there should be one");
         }
-        let own = game.next().ok_or_else(|| anyhow!("Missing own action"))?;
+        let own = game.next().ok_or_else(|| eyre!("Missing own action"))?;
 
         let opponent = Shape::try_from(opponent).context("Invalid opponent shape")?;
         let own = Shape::try_from(own).context("Invalid own shape")?;
@@ -217,19 +221,19 @@ impl GamePartTwo {
 }
 
 impl TryFrom<&str> for GamePartTwo {
-    type Error = anyhow::Error;
+    type Error = eyre::Error;
 
     fn try_from(game: &str) -> Result<Self> {
         let mut game = game.chars();
         let opponent = game
             .next()
-            .ok_or_else(|| anyhow!("Missing opponent action"))?;
+            .ok_or_else(|| eyre!("Missing opponent action"))?;
 
-        let space = game.next().ok_or_else(|| anyhow!("Missing space"))?;
+        let space = game.next().ok_or_else(|| eyre!("Missing space"))?;
         if space != ' ' {
             bail!("No space where there should be one");
         }
-        let outcome = game.next().ok_or_else(|| anyhow!("Missing outcome"))?;
+        let outcome = game.next().ok_or_else(|| eyre!("Missing outcome"))?;
 
         let opponent = Shape::try_from(opponent).context("Invalid opponent shape")?;
         let outcome = Outcome::try_from(outcome).context("Invalid outcome")?;

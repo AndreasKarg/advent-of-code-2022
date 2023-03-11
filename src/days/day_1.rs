@@ -1,7 +1,6 @@
 use std::str::FromStr;
-
-use anyhow::{Context, Result};
-
+use color_eyre::eyre::Context;
+use color_eyre::Result;
 #[cfg(test)]
 mod tests {
     use super::*;

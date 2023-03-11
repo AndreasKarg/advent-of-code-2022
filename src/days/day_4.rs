@@ -1,4 +1,7 @@
-use anyhow::{anyhow, Context, Result};
+use color_eyre::{
+    eyre::{eyre, Context},
+    Result,
+};
 use std::ops::RangeInclusive;
 
 #[cfg(test)]
@@ -97,10 +100,10 @@ fn parse_range(raw_range: &str) -> Result<RangeInclusive<u32>> {
     let mut halves = raw_range.split('-');
     let first_half = halves
         .next()
-        .ok_or_else(|| anyhow! {"Missing first half in {raw_range}!"})?;
+        .ok_or_else(|| eyre! {"Missing first half in {raw_range}!"})?;
     let second_half = halves
         .next()
-        .ok_or_else(|| anyhow! {"Missing second half in {raw_range}!"})?;
+        .ok_or_else(|| eyre! {"Missing second half in {raw_range}!"})?;
 
     let first_half: u32 = first_half.parse()?;
     let second_half: u32 = second_half.parse()?;
