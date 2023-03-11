@@ -2,7 +2,10 @@
 
 use clap::{Parser, ValueEnum};
 use color_eyre::{eyre::Context, Result};
+use std::collections::hash_map::DefaultHasher;
 use std::fs::{create_dir_all, read, write};
+use std::hash::{Hash, Hasher};
+use std::ptr::hash;
 
 mod days;
 mod input_fetcher;
@@ -36,8 +39,13 @@ fn main() -> Result<()> {
     let package_name = env!("CARGO_PKG_NAME");
     let project_dir =
         directories::ProjectDirs::from("", "AndreasKargSoftware", package_name).unwrap();
+
+    let mut hasher = DefaultHasher::new();
+    args.session_id.hash(&mut hasher);
+    let session_id_hash = format!("{:x}", hasher.finish());
+
     let cache_dir = project_dir.cache_dir();
-    let session_cache_dir = cache_dir.join(&args.session_id[..10]);
+    let session_cache_dir = cache_dir.join(&session_id_hash);
     let cache_file_name = format!("day_{}.txt", args.advent_day);
     let cache_file_path = session_cache_dir.join(cache_file_name);
     let stringified_cache_file_path = cache_file_path.to_str().unwrap().to_owned();
