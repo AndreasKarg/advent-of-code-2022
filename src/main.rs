@@ -37,22 +37,30 @@ fn main() -> Result<()> {
     let project_dir =
         directories::ProjectDirs::from("", "AndreasKargSoftware", package_name).unwrap();
     let cache_dir = project_dir.cache_dir();
-    let session_cache_dir = cache_dir.join(&args.session_id);
+    let session_cache_dir = cache_dir.join(&args.session_id[..10]);
     let cache_file_name = format!("day_{}.txt", args.advent_day);
     let cache_file_path = session_cache_dir.join(cache_file_name);
+    let stringified_cache_file_path = cache_file_path.to_str().unwrap().to_owned();
 
     let input = if cache_file_path.exists() {
-        let stringified_path = cache_file_path.to_str().unwrap().to_owned();
-        println!("Using cached inputs from {}...", stringified_path);
-        let input = read(cache_file_path)
-            .with_context(|| format!("Unable to read cache file at {stringified_path}!"))?;
-        String::from_utf8(input).with_context(|| format!("Invalid UTF-8 in {stringified_path}!"))?
+        println!(
+            "Using cached inputs from {}...",
+            stringified_cache_file_path
+        );
+        let input = read(cache_file_path).wrap_err_with(|| {
+            format!("Unable to read cache file at {stringified_cache_file_path}!")
+        })?;
+        String::from_utf8(input)
+            .wrap_err_with(|| format!("Invalid UTF-8 in {stringified_cache_file_path}!"))?
     } else {
         println!("No cached input found. Downloading fresh copy...");
         let response_body = input_fetcher::fetch(args.advent_day, &args.session_id);
 
-        create_dir_all(cache_dir)?;
-        write(cache_file_path, &response_body)?;
+        let stringified_cache_dir = cache_dir.to_str().unwrap().to_owned();
+        create_dir_all(session_cache_dir)
+            .wrap_err_with(|| format!("Unable to create dir {stringified_cache_dir}!"))?;
+        write(cache_file_path, &response_body)
+            .wrap_err_with(|| format!("Unable to write to {stringified_cache_file_path}!"))?;
 
         response_body
     };

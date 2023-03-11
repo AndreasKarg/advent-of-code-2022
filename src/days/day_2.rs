@@ -44,7 +44,7 @@ pub fn solve_part_1(input: &str) -> String {
     let rows = input.trim().split('\n');
     let games = rows.enumerate().map(|(idx, row)| {
         GamePartOne::try_from(row)
-            .with_context(|| format!("Unable to parse row \"{row}\" ({idx})!"))
+            .wrap_err_with(|| format!("Unable to parse row \"{row}\" ({idx})!"))
             .unwrap()
     });
 
@@ -58,7 +58,7 @@ pub fn solve_part_2(input: &str) -> String {
     let rows = input.trim().split('\n');
     let games = rows.enumerate().map(|(idx, row)| {
         GamePartTwo::try_from(row)
-            .with_context(|| format!("Unable to parse row \"{row}\" ({idx})!"))
+            .wrap_err_with(|| format!("Unable to parse row \"{row}\" ({idx})!"))
             .unwrap()
     });
 

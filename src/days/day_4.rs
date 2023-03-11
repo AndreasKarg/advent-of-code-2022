@@ -114,7 +114,7 @@ fn parse_range(raw_range: &str) -> Result<RangeInclusive<u32>> {
 fn parse_pair(raw_pair: &str) -> Result<(RangeInclusive<u32>, RangeInclusive<u32>)> {
     let halves = raw_pair.split(',');
     let ranges: Result<Vec<_>> = halves.map(parse_range).collect();
-    let ranges = ranges.with_context(|| format!("Unable to parse ranges from {raw_pair}!"))?;
+    let ranges = ranges.wrap_err_with(|| format!("Unable to parse ranges from {raw_pair}!"))?;
     assert_eq!(ranges.len(), 2);
 
     Ok((ranges[0].clone(), ranges[1].clone()))

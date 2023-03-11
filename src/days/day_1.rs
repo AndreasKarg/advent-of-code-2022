@@ -1,6 +1,6 @@
-use std::str::FromStr;
 use color_eyre::eyre::Context;
 use color_eyre::Result;
+use std::str::FromStr;
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -66,7 +66,7 @@ fn parse_group(group: &str) -> Result<Vec<u32>> {
         .filter(|(_, line)| !line.is_empty())
         .map(|(idx, line)| {
             u32::from_str(line)
-                .with_context(|| format!("Failed to parse \"{line}\" on line {idx}!"))
+                .wrap_err_with(|| format!("Failed to parse \"{line}\" on line {idx}!"))
         })
         .collect()
 }
