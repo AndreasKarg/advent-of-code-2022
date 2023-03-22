@@ -1,4 +1,5 @@
 #![feature(iter_array_chunks)]
+#![feature(generators, generator_trait, iter_from_generator)]
 
 use clap::{Parser, ValueEnum};
 use color_eyre::{eyre::Context, Result};
@@ -85,6 +86,8 @@ fn main() -> Result<()> {
         (5, Part::Two) => days::day_5::solve_part_2,
         (6, Part::One) => days::day_6::solve_part_1,
         (6, Part::Two) => days::day_6::solve_part_2,
+        (7, Part::One) => days::day_7::solve_part_1,
+        (7, Part::Two) => days::day_7::solve_part_2,
         _ => panic!("Unknown combo of advent day and puzzle part."),
     };
 
