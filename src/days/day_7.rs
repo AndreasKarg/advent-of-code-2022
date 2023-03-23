@@ -252,7 +252,7 @@ pub fn solve_part_1(input_data: &str) -> String {
     let mut size_accumulator = 0u64;
     let mut collect_sizes = |d: &Directory| {
         let size = d.size();
-        if (size < 100_000) {
+        if size < 100_000 {
             size_accumulator += size;
         }
     };
@@ -263,7 +263,43 @@ pub fn solve_part_1(input_data: &str) -> String {
 }
 
 pub fn solve_part_2(input_data: &str) -> String {
-    todo!()
+    let outcome = parse_tree(input_data);
+
+    let tree = match outcome {
+        Ok((res, tree)) => {
+            assert!(res.is_empty(), r#"Res not empty! Leftovers: "{res}""#);
+
+            tree
+        }
+        Err(e) => {
+            println!("{e:#?}");
+            panic!("Parser failure!");
+        }
+    };
+
+    let mut dir_sizes = Vec::new();
+
+    let mut collect_dir_size = |d: &Directory| {
+        dir_sizes.push(d.size());
+    };
+
+    tree.walk_apply(&mut collect_dir_size);
+
+    dir_sizes.sort_unstable();
+
+    let drive_size = 70_000_000;
+    let required_free_size = 30_000_000;
+    let maximum_allowed_use = drive_size - required_free_size;
+    let total_used = tree.size();
+    let minimum_amount_to_free = total_used - maximum_allowed_use;
+
+    for s in dir_sizes {
+        if s >= minimum_amount_to_free {
+            return format!("{s}");
+        }
+    }
+
+    unreachable!("No directory is big enough to fulfil the criteria - this should never happen!");
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
