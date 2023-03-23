@@ -9,7 +9,6 @@ use nom::combinator::{not, opt};
 use nom::multi::{many0, many1};
 use nom::sequence::terminated;
 // use nom::IResult;
-use once_cell::unsync::OnceCell;
 use std::collections::HashSet;
 
 pub type IResult<I, O> = nom::IResult<I, O, nom_supreme::error::ErrorTree<I>>;
@@ -278,26 +277,26 @@ struct Directory {
     name: String,
     files: Vec<File>,
     subdirectories: Vec<Directory>,
-    size: OnceCell<u64>,
+    size: u64,
 }
 
 impl Directory {
     fn new(name: &str, files: Vec<File>, subdirectories: Vec<Directory>) -> Self {
+        let total_file_size: u64 = files.iter().map(|f| f.size).sum();
+        let total_subdir_size: u64 = subdirectories.iter().map(|d| d.size()).sum();
+
+        let dir_size = total_file_size + total_subdir_size;
+
         Self {
             name: name.to_owned(),
             files,
             subdirectories,
-            size: OnceCell::new(),
+            size: dir_size,
         }
     }
 
     fn size(&self) -> u64 {
-        *self.size.get_or_init(|| {
-            let total_file_size: u64 = self.files.iter().map(|f| f.size).sum();
-            let total_subdir_size: u64 = self.subdirectories.iter().map(|d| d.size()).sum();
-
-            total_file_size + total_subdir_size
-        })
+        self.size
     }
 
     fn walk_apply<F: FnMut(&Self)>(&self, f: &mut F) {
