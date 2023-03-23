@@ -10,9 +10,6 @@ use nom::multi::{many0, many1};
 use nom::sequence::terminated;
 // use nom::IResult;
 use std::collections::HashSet;
-use std::ops::Generator;
-use std::ops::GeneratorState::Yielded;
-use std::pin::Pin;
 
 pub type IResult<I, O> = nom::IResult<I, O, nom_supreme::error::ErrorTree<I>>;
 
@@ -246,36 +243,31 @@ mod tests {
 }
 
 pub fn solve_part_1(input_data: &str) -> String {
-    println!("Hullo!");
     let outcome = parse_tree(input_data);
 
-    match outcome {
+    let tree = match outcome {
         Ok((res, tree)) => {
             assert!(res.is_empty(), r#"Res not empty! Leftovers: "{res}""#);
 
-            let dirs = Box::into_pin(tree.walk());
-            let mut dirs = std::iter::from_generator(dirs);
-
-            let sizes = dirs.filter_map(|d| {
-                println!("Rolling through dir {} ...", d.name);
-                let size = d.size();
-
-                if size < 100_000 {
-                    Some(size)
-                } else {
-                    None
-                }
-            });
-
-            let total_size: u64 = sizes.sum();
-
-            return format!("{total_size}");
+            tree
         }
         Err(e) => {
             println!("{e:#?}");
             panic!("Parser failure!");
         }
-    }
+    };
+
+    let mut size_accumulator = 0u64;
+    let mut collect_sizes = |d: &Directory| {
+        let size = d.size();
+        if (size < 100_000) {
+            size_accumulator += size;
+        }
+    };
+
+    tree.walk_apply(&mut collect_sizes);
+
+    return format!("{size_accumulator}");
 }
 
 pub fn solve_part_2(input_data: &str) -> String {
@@ -303,20 +295,12 @@ impl Directory {
         total_file_size + total_subdir_size
     }
 
-    fn walk(&self) -> Box<dyn Generator<Yield = &Directory, Return = ()> + '_> {
-        Box::new(|| {
-            for d in self.subdirectories.iter() {
-                println!("Yielding dir {} ...", d.name);
-                yield d;
-                let mut sub_walker = Box::into_pin(d.walk());
-                if let Yielded(y) = Pin::new(&mut sub_walker).resume(()) {
-                    println!("Yielding subdir {}/{} ...", d.name, y.name);
-                    yield y;
-                } else {
-                    println!("Nothing to yield in {}", d.name);
-                }
-            }
-        })
+    fn walk_apply<F: FnMut(&Self)>(&self, f: &mut F) {
+        (*f)(self);
+
+        for d in self.subdirectories.iter() {
+            d.walk_apply(f);
+        }
     }
 }
 

@@ -1,5 +1,4 @@
 #![feature(iter_array_chunks)]
-#![feature(generators, generator_trait, iter_from_generator)]
 
 use clap::{Parser, ValueEnum};
 use color_eyre::{eyre::Context, Result};
