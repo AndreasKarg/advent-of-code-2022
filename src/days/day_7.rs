@@ -9,6 +9,7 @@ use nom::combinator::{not, opt};
 use nom::multi::{many0, many1};
 use nom::sequence::terminated;
 // use nom::IResult;
+use once_cell::unsync::OnceCell;
 use std::collections::HashSet;
 
 pub type IResult<I, O> = nom::IResult<I, O, nom_supreme::error::ErrorTree<I>>;
@@ -81,9 +82,9 @@ mod tests {
             "
         };
 
-        let expected_tree = Directory {
-            name: "/".to_owned(),
-            files: vec![
+        let expected_tree = Directory::new(
+            "/",
+            vec![
                 File {
                     name: "b.txt".to_owned(),
                     size: 14848514,
@@ -93,11 +94,10 @@ mod tests {
                     size: 8504156,
                 },
             ],
-
-            subdirectories: vec![
-                Directory {
-                    name: "a".to_owned(),
-                    files: vec![
+            vec![
+                Directory::new(
+                    "a",
+                    vec![
                         File {
                             name: "f".to_owned(),
                             size: 29116,
@@ -111,20 +111,18 @@ mod tests {
                             size: 62596,
                         },
                     ],
-
-                    subdirectories: vec![Directory {
-                        name: "e".to_owned(),
-                        files: vec![File {
+                    vec![Directory::new(
+                        "e",
+                        vec![File {
                             name: "i".to_owned(),
                             size: 584,
                         }],
-
-                        subdirectories: vec![],
-                    }],
-                },
-                Directory {
-                    name: "d".to_owned(),
-                    files: vec![
+                        vec![],
+                    )],
+                ),
+                Directory::new(
+                    "d",
+                    vec![
                         File {
                             name: "j".to_owned(),
                             size: 4060174,
@@ -142,11 +140,10 @@ mod tests {
                             size: 7214296,
                         },
                     ],
-
-                    subdirectories: vec![],
-                },
+                    vec![],
+                ),
             ],
-        };
+        );
 
         // When
         let outcome = parse_tree(input);
@@ -167,9 +164,9 @@ mod tests {
     #[test]
     fn directory_size_returns_sum_of_file_sizes_plus_sum_of_subdirectory_sizes() {
         // Given
-        let tree = Directory {
-            name: "/".to_owned(),
-            files: vec![
+        let tree = Directory::new(
+            "/",
+            vec![
                 File {
                     name: "b.txt".to_owned(),
                     size: 14848514,
@@ -179,11 +176,10 @@ mod tests {
                     size: 8504156,
                 },
             ],
-
-            subdirectories: vec![
-                Directory {
-                    name: "a".to_owned(),
-                    files: vec![
+            vec![
+                Directory::new(
+                    "a",
+                    vec![
                         File {
                             name: "f".to_owned(),
                             size: 29116,
@@ -197,20 +193,18 @@ mod tests {
                             size: 62596,
                         },
                     ],
-
-                    subdirectories: vec![Directory {
-                        name: "e".to_owned(),
-                        files: vec![File {
+                    vec![Directory::new(
+                        "e",
+                        vec![File {
                             name: "i".to_owned(),
                             size: 584,
                         }],
-
-                        subdirectories: vec![],
-                    }],
-                },
-                Directory {
-                    name: "d".to_owned(),
-                    files: vec![
+                        vec![],
+                    )],
+                ),
+                Directory::new(
+                    "d",
+                    vec![
                         File {
                             name: "j".to_owned(),
                             size: 4060174,
@@ -228,11 +222,10 @@ mod tests {
                             size: 7214296,
                         },
                     ],
-
-                    subdirectories: vec![],
-                },
+                    vec![],
+                ),
             ],
-        };
+        );
 
         // When
         let actual_size = tree.size();
@@ -285,14 +278,26 @@ struct Directory {
     name: String,
     files: Vec<File>,
     subdirectories: Vec<Directory>,
+    size: OnceCell<u64>,
 }
 
 impl Directory {
-    fn size(&self) -> u64 {
-        let total_file_size: u64 = self.files.iter().map(|f| f.size).sum();
-        let total_subdir_size: u64 = self.subdirectories.iter().map(|d| d.size()).sum();
+    fn new(name: &str, files: Vec<File>, subdirectories: Vec<Directory>) -> Self {
+        Self {
+            name: name.to_owned(),
+            files,
+            subdirectories,
+            size: OnceCell::new(),
+        }
+    }
 
-        total_file_size + total_subdir_size
+    fn size(&self) -> u64 {
+        *self.size.get_or_init(|| {
+            let total_file_size: u64 = self.files.iter().map(|f| f.size).sum();
+            let total_subdir_size: u64 = self.subdirectories.iter().map(|d| d.size()).sum();
+
+            total_file_size + total_subdir_size
+        })
     }
 
     fn walk_apply<F: FnMut(&Self)>(&self, f: &mut F) {
@@ -362,12 +367,5 @@ fn parse_tree(i: &str) -> IResult<&str, Directory> {
 
     let (res, _) = opt(parse_cd_dot_dot)(res)?;
 
-    Ok((
-        res,
-        Directory {
-            name: dir_name.to_owned(),
-            files,
-            subdirectories,
-        },
-    ))
+    Ok((res, Directory::new(dir_name, files, subdirectories)))
 }
