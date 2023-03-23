@@ -1,15 +1,9 @@
-use color_eyre::eyre::eyre;
-use color_eyre::Result;
 use nom::branch::alt;
-use nom::bytes::complete::{tag, take_till, take_until, take_while};
-use nom::character::complete::{
-    line_ending, multispace1, newline, not_line_ending, one_of, space1,
-};
+use nom::bytes::complete::tag;
+use nom::character::complete::{newline, not_line_ending, space1};
 use nom::combinator::{not, opt};
 use nom::multi::{many0, many1};
 use nom::sequence::terminated;
-// use nom::IResult;
-use std::collections::HashSet;
 
 pub type IResult<I, O> = nom::IResult<I, O, nom_supreme::error::ErrorTree<I>>;
 
@@ -17,8 +11,73 @@ pub type IResult<I, O> = nom::IResult<I, O, nom_supreme::error::ErrorTree<I>>;
 mod tests {
     use super::*;
     use indoc::indoc;
+    use once_cell::sync::Lazy;
     use pretty_assertions::assert_eq;
-    use yare::parameterized;
+
+    static EXAMPLE_TREE: Lazy<Directory> = Lazy::new(|| {
+        Directory::new(
+            "/",
+            vec![
+                File {
+                    name: "b.txt".to_owned(),
+                    size: 14848514,
+                },
+                File {
+                    name: "c.dat".to_owned(),
+                    size: 8504156,
+                },
+            ],
+            vec![
+                Directory::new(
+                    "a",
+                    vec![
+                        File {
+                            name: "f".to_owned(),
+                            size: 29116,
+                        },
+                        File {
+                            name: "g".to_owned(),
+                            size: 2557,
+                        },
+                        File {
+                            name: "h.lst".to_owned(),
+                            size: 62596,
+                        },
+                    ],
+                    vec![Directory::new(
+                        "e",
+                        vec![File {
+                            name: "i".to_owned(),
+                            size: 584,
+                        }],
+                        vec![],
+                    )],
+                ),
+                Directory::new(
+                    "d",
+                    vec![
+                        File {
+                            name: "j".to_owned(),
+                            size: 4060174,
+                        },
+                        File {
+                            name: "d.log".to_owned(),
+                            size: 8033020,
+                        },
+                        File {
+                            name: "d.ext".to_owned(),
+                            size: 5626152,
+                        },
+                        File {
+                            name: "k".to_owned(),
+                            size: 7214296,
+                        },
+                    ],
+                    vec![],
+                ),
+            ],
+        )
+    });
 
     #[test]
     fn parse_ls_output_returns_files_in_directory() {
@@ -81,68 +140,7 @@ mod tests {
             "
         };
 
-        let expected_tree = Directory::new(
-            "/",
-            vec![
-                File {
-                    name: "b.txt".to_owned(),
-                    size: 14848514,
-                },
-                File {
-                    name: "c.dat".to_owned(),
-                    size: 8504156,
-                },
-            ],
-            vec![
-                Directory::new(
-                    "a",
-                    vec![
-                        File {
-                            name: "f".to_owned(),
-                            size: 29116,
-                        },
-                        File {
-                            name: "g".to_owned(),
-                            size: 2557,
-                        },
-                        File {
-                            name: "h.lst".to_owned(),
-                            size: 62596,
-                        },
-                    ],
-                    vec![Directory::new(
-                        "e",
-                        vec![File {
-                            name: "i".to_owned(),
-                            size: 584,
-                        }],
-                        vec![],
-                    )],
-                ),
-                Directory::new(
-                    "d",
-                    vec![
-                        File {
-                            name: "j".to_owned(),
-                            size: 4060174,
-                        },
-                        File {
-                            name: "d.log".to_owned(),
-                            size: 8033020,
-                        },
-                        File {
-                            name: "d.ext".to_owned(),
-                            size: 5626152,
-                        },
-                        File {
-                            name: "k".to_owned(),
-                            size: 7214296,
-                        },
-                    ],
-                    vec![],
-                ),
-            ],
-        );
+        let expected_tree = &EXAMPLE_TREE;
 
         // When
         let outcome = parse_tree(input);
@@ -151,7 +149,7 @@ mod tests {
         match outcome {
             Ok((res, actual_tree)) => {
                 assert!(res.is_empty(), r#"Res not empty! Leftovers: "{res}""#);
-                assert_eq!(actual_tree, expected_tree);
+                assert_eq!(actual_tree, **expected_tree);
             }
             Err(e) => {
                 println!("{e:#?}");
@@ -163,68 +161,7 @@ mod tests {
     #[test]
     fn directory_size_returns_sum_of_file_sizes_plus_sum_of_subdirectory_sizes() {
         // Given
-        let tree = Directory::new(
-            "/",
-            vec![
-                File {
-                    name: "b.txt".to_owned(),
-                    size: 14848514,
-                },
-                File {
-                    name: "c.dat".to_owned(),
-                    size: 8504156,
-                },
-            ],
-            vec![
-                Directory::new(
-                    "a",
-                    vec![
-                        File {
-                            name: "f".to_owned(),
-                            size: 29116,
-                        },
-                        File {
-                            name: "g".to_owned(),
-                            size: 2557,
-                        },
-                        File {
-                            name: "h.lst".to_owned(),
-                            size: 62596,
-                        },
-                    ],
-                    vec![Directory::new(
-                        "e",
-                        vec![File {
-                            name: "i".to_owned(),
-                            size: 584,
-                        }],
-                        vec![],
-                    )],
-                ),
-                Directory::new(
-                    "d",
-                    vec![
-                        File {
-                            name: "j".to_owned(),
-                            size: 4060174,
-                        },
-                        File {
-                            name: "d.log".to_owned(),
-                            size: 8033020,
-                        },
-                        File {
-                            name: "d.ext".to_owned(),
-                            size: 5626152,
-                        },
-                        File {
-                            name: "k".to_owned(),
-                            size: 7214296,
-                        },
-                    ],
-                    vec![],
-                ),
-            ],
-        );
+        let tree = &EXAMPLE_TREE;
 
         // When
         let actual_size = tree.size();
@@ -235,19 +172,7 @@ mod tests {
 }
 
 pub fn solve_part_1(input_data: &str) -> String {
-    let outcome = parse_tree(input_data);
-
-    let tree = match outcome {
-        Ok((res, tree)) => {
-            assert!(res.is_empty(), r#"Res not empty! Leftovers: "{res}""#);
-
-            tree
-        }
-        Err(e) => {
-            println!("{e:#?}");
-            panic!("Parser failure!");
-        }
-    };
+    let tree = parse_and_unwrap_tree(input_data);
 
     let mut size_accumulator = 0u64;
     let mut collect_sizes = |d: &Directory| {
@@ -263,19 +188,7 @@ pub fn solve_part_1(input_data: &str) -> String {
 }
 
 pub fn solve_part_2(input_data: &str) -> String {
-    let outcome = parse_tree(input_data);
-
-    let tree = match outcome {
-        Ok((res, tree)) => {
-            assert!(res.is_empty(), r#"Res not empty! Leftovers: "{res}""#);
-
-            tree
-        }
-        Err(e) => {
-            println!("{e:#?}");
-            panic!("Parser failure!");
-        }
-    };
+    let tree = parse_and_unwrap_tree(input_data);
 
     let mut dir_sizes = Vec::new();
 
@@ -403,4 +316,20 @@ fn parse_tree(i: &str) -> IResult<&str, Directory> {
     let (res, _) = opt(parse_cd_dot_dot)(res)?;
 
     Ok((res, Directory::new(dir_name, files, subdirectories)))
+}
+
+fn parse_and_unwrap_tree(input_data: &str) -> Directory {
+    let outcome = parse_tree(input_data);
+
+    match outcome {
+        Ok((res, tree)) => {
+            assert!(res.is_empty(), r#"Res not empty! Leftovers: "{res}""#);
+
+            tree
+        }
+        Err(e) => {
+            println!("{e:#?}");
+            panic!("Parser failure!");
+        }
+    }
 }

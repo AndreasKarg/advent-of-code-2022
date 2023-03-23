@@ -28,6 +28,7 @@ dependencies = [
  "itertools",
  "nom",
  "nom-supreme",
+ "once_cell",
  "pretty_assertions",
  "reqwest",
  "yare",
